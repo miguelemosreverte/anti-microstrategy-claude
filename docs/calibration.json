@@ -1,1 +1,11 @@
-[]
+[
+  {
+    "commit": "7b1e480",
+    "message": "Restructure repo: remove v1, add backtest engine + GitHub Pages",
+    "timestamp": "2026-02-20T01:16:53Z",
+    "avg_alpha_pct": 4.2851,
+    "win_rate_pct": 100.0,
+    "alpha_positive_rate_pct": 100.0,
+    "total_trades": 33
+  }
+]
