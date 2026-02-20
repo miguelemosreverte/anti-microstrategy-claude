@@ -2,7 +2,7 @@
 """
 Download historical market data and build a labeled dataset for backtesting.
 
-Fetches 30 days of:
+Fetches 60 days of:
 - BTC OHLCV (1-hour candles) from Deribit public API (no auth needed)
 - BTC funding rate history from Deribit
 - Fear & Greed Index history from Alternative.me
@@ -11,6 +11,12 @@ Fetches 30 days of:
 All data is saved as a single JSON file in datasets/ with labels:
 - For each hourly candle, we label the NEXT 24h return (forward-looking)
 - This lets us evaluate: "if the agent shorted here, would it have profited?"
+
+60 days gives enough data for sliding-window CV with 25d train / 5d test:
+  Fold 1: [=== 25d train ===][= 5d test =]
+  Fold 2:   [=== 25d train ===][= 5d test =]
+  ...
+  Fold N:               [=== 25d train ===][= 5d test =]
 """
 
 import json
@@ -210,7 +216,7 @@ def merge_fear_greed(ohlcv: pd.DataFrame, fg: pd.DataFrame) -> pd.DataFrame:
     return ohlcv
 
 
-def build_dataset(days: int = 30) -> str:
+def build_dataset(days: int = 60) -> str:
     """Build the complete labeled dataset and save to JSON."""
     print(f"\n{'='*60}")
     print(f"  Building {days}-day labeled dataset")
@@ -299,5 +305,5 @@ def build_dataset(days: int = 30) -> str:
 
 
 if __name__ == "__main__":
-    days = int(sys.argv[1]) if len(sys.argv) > 1 else 30
+    days = int(sys.argv[1]) if len(sys.argv) > 1 else 60
     build_dataset(days)

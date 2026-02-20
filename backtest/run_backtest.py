@@ -59,7 +59,7 @@ def main():
     # Optionally re-fetch
     if args.fetch or not os.path.exists(os.path.join(os.path.dirname(__file__), "..", "datasets", "latest.json")):
         print("Fetching fresh dataset...")
-        build_dataset(days=30)
+        build_dataset(days=60)
 
     max_folds = None if args.all else args.folds
 

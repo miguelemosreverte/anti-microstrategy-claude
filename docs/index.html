@@ -4,132 +4,660 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Anti-MicroStrategy Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap');
+        /* ================================================================
+           CSS CUSTOM PROPERTIES — LIGHT (default)
+           ================================================================ */
         :root {
-            --black: #111; --dark: #222; --gray: #666;
-            --light-gray: #999; --border: #ccc; --bg: #faf9f6;
-            --white: #fff; --red: #b91c1c; --green: #15803d;
-            --blue: #1e40af; --gold: #b8860b;
+            --bg:           #faf9f6;
+            --bg-card:      #ffffff;
+            --text:         #111111;
+            --text-secondary: #666666;
+            --text-muted:   #999999;
+            --border:       #d4d4d4;
+            --border-light: #eeeeee;
+            --hover-bg:     #f5f5f0;
+            --stripe-bg:    #fafafa;
+            --green:        #15803d;
+            --green-bg:     #f0fdf4;
+            --green-border: #bbf7d0;
+            --red:          #b91c1c;
+            --red-bg:       #fef2f2;
+            --red-border:   #fecaca;
+            --blue:         #1e40af;
+            --gold:         #b8860b;
+            --chart-line:   #1e40af;
+            --chart-grid:   #eeeeee;
+            --chart-zero:   #cccccc;
+            --chart-green:  rgba(21, 128, 61, 0.15);
+            --chart-red:    rgba(185, 28, 28, 0.15);
+            --badge-idle-bg:    #f3f4f6;
+            --badge-idle-text:  #666666;
+            --code-bg:      #f3f4f6;
+            --shadow:       none;
+            --masthead-bg:  #ffffff;
+            --nav-bg:       #ffffff;
+            --progress-bg:  #e5e7eb;
+            --info-bg:      #f8f9fa;
+            --info-border:  #e2e4e7;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Source Serif 4', Georgia, serif; background: var(--bg); color: var(--black); line-height: 1.6; }
 
-        /* Masthead */
-        .masthead { text-align: center; padding: 32px 20px 20px; border-bottom: 3px double var(--black); background: var(--white); }
-        .masthead h1 { font-family: 'Playfair Display', serif; font-weight: 900; font-size: 36px; letter-spacing: -0.5px; }
-        .masthead .subtitle { font-family: 'Inter', sans-serif; font-size: 12px; text-transform: uppercase; letter-spacing: 3px; color: var(--light-gray); margin-top: 6px; }
+        /* ================================================================
+           CSS CUSTOM PROPERTIES — DARK
+           ================================================================ */
+        [data-theme="dark"] {
+            --bg:           #1a1a2e;
+            --bg-card:      #16213e;
+            --text:         #e0e0e0;
+            --text-secondary: #a0a0b0;
+            --text-muted:   #707080;
+            --border:       #2a2a4a;
+            --border-light: #252545;
+            --hover-bg:     #1e1e3a;
+            --stripe-bg:    #191935;
+            --green:        #4ade80;
+            --green-bg:     rgba(74, 222, 128, 0.08);
+            --green-border: rgba(74, 222, 128, 0.25);
+            --red:          #f87171;
+            --red-bg:       rgba(248, 113, 113, 0.08);
+            --red-border:   rgba(248, 113, 113, 0.25);
+            --blue:         #60a5fa;
+            --gold:         #d4a847;
+            --chart-line:   #60a5fa;
+            --chart-grid:   #2a2a4a;
+            --chart-zero:   #3a3a5a;
+            --chart-green:  rgba(74, 222, 128, 0.12);
+            --chart-red:    rgba(248, 113, 113, 0.12);
+            --badge-idle-bg:    #252545;
+            --badge-idle-text:  #a0a0b0;
+            --code-bg:      #252545;
+            --shadow:       0 2px 8px rgba(0,0,0,0.3);
+            --masthead-bg:  #16213e;
+            --nav-bg:       #16213e;
+            --progress-bg:  #2a2a4a;
+            --info-bg:      #16213e;
+            --info-border:  #2a2a4a;
+        }
 
-        /* Navigation */
-        .nav { display: flex; justify-content: center; gap: 0; background: var(--white); border-bottom: 1px solid var(--border); }
-        .nav-item { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; padding: 14px 24px; cursor: pointer; border-bottom: 3px solid transparent; color: var(--gray); transition: all 0.2s; }
-        .nav-item:hover { color: var(--black); }
-        .nav-item.active { color: var(--black); border-bottom-color: var(--black); }
+        /* ================================================================
+           RESET & BASE
+           ================================================================ */
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-        .container { max-width: 960px; margin: 0 auto; padding: 0 20px; }
-        .section { display: none; padding: 30px 0; }
-        .section.active { display: block; }
-        .section-header { font-family: 'Inter', sans-serif; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: var(--light-gray); padding: 24px 0 8px; border-bottom: 2px solid var(--black); margin-bottom: 20px; }
+        body {
+            font-family: 'Source Serif 4', Georgia, serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
 
-        /* Cards */
-        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 30px; }
-        .card { background: var(--white); border: 1px solid var(--border); padding: 20px; text-align: center; }
-        .card-label { font-family: 'Inter', sans-serif; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--light-gray); margin-bottom: 6px; }
-        .card-value { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 700; }
-        .card-sub { font-family: 'Inter', sans-serif; font-size: 12px; color: var(--gray); margin-top: 4px; }
+        a { color: var(--blue); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        code {
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.9em;
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        /* ================================================================
+           MASTHEAD
+           ================================================================ */
+        .masthead {
+            text-align: center;
+            padding: 32px 20px 20px;
+            border-bottom: 3px double var(--text);
+            background: var(--masthead-bg);
+            position: relative;
+            transition: background 0.3s ease;
+        }
+        .masthead h1 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 900;
+            font-size: 36px;
+            letter-spacing: -0.5px;
+            color: var(--text);
+        }
+        .masthead .subtitle {
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        /* ================================================================
+           THEME TOGGLE
+           ================================================================ */
+        .theme-toggle {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            width: 36px;
+            height: 36px;
+            cursor: pointer;
+            font-size: 18px;
+            line-height: 36px;
+            text-align: center;
+            color: var(--text);
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .theme-toggle:hover {
+            background: var(--hover-bg);
+        }
+
+        /* ================================================================
+           NAVIGATION
+           ================================================================ */
+        .nav {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0;
+            background: var(--nav-bg);
+            border-bottom: 1px solid var(--border);
+            transition: background 0.3s ease;
+        }
+        .nav-item {
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 14px 24px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            color: var(--text-secondary);
+            transition: color 0.2s, border-color 0.2s;
+            user-select: none;
+        }
+        .nav-item:hover { color: var(--text); }
+        .nav-item.active {
+            color: var(--text);
+            border-bottom-color: var(--text);
+        }
+
+        /* ================================================================
+           CONTAINER & SECTIONS
+           ================================================================ */
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        .section {
+            display: none;
+            padding: 30px 0;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .section.active {
+            display: block;
+            opacity: 1;
+        }
+        .section.fade-in {
+            opacity: 1;
+        }
+        .section-header {
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            padding: 24px 0 8px;
+            border-bottom: 2px solid var(--text);
+            margin-bottom: 20px;
+        }
+        .section-desc {
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+            line-height: 1.7;
+        }
+
+        /* ================================================================
+           HERO GRADE
+           ================================================================ */
+        .hero-grade {
+            text-align: center;
+            padding: 48px 20px 40px;
+        }
+        .hero-grade .grade-letter {
+            font-family: 'Playfair Display', serif;
+            font-weight: 900;
+            font-size: 120px;
+            line-height: 1;
+            letter-spacing: -4px;
+        }
+        .hero-grade .grade-label {
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+        .hero-grade .grade-sublabel {
+            font-family: 'Source Serif 4', serif;
+            font-size: 15px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* ================================================================
+           CARDS
+           ================================================================ */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        [data-theme="dark"] .card:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+        }
+        .card-label {
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+        .card-value {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+        .card-sub {
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
         .positive { color: var(--green); }
         .negative { color: var(--red); }
 
-        /* Table */
-        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-family: 'Inter', sans-serif; font-size: 14px; }
-        th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--light-gray); padding: 8px 12px; border-bottom: 2px solid var(--black); }
-        td { padding: 10px 12px; border-bottom: 1px solid #eee; }
-        tr:hover td { background: #f5f5f0; }
-        .num { text-align: right; font-variant-numeric: tabular-nums; }
+        /* ================================================================
+           TABLES
+           ================================================================ */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+        }
+        th {
+            text-align: left;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            padding: 8px 12px;
+            border-bottom: 2px solid var(--text);
+        }
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border-light);
+            font-variant-numeric: tabular-nums;
+            transition: background 0.15s;
+        }
+        tbody tr:nth-child(even) td {
+            background: var(--stripe-bg);
+        }
+        tbody tr:hover td {
+            background: var(--hover-bg);
+        }
+        .num { text-align: right; }
 
-        /* Chart */
-        .chart-area { background: var(--white); border: 1px solid var(--border); padding: 20px; margin-bottom: 30px; min-height: 300px; position: relative; }
-        .chart-title { font-family: 'Inter', sans-serif; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: var(--light-gray); margin-bottom: 16px; }
-        canvas { width: 100% !important; height: 280px !important; }
+        .commit-hash {
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 12px;
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
 
-        /* Status */
-        .status-badge { display: inline-block; padding: 4px 12px; border-radius: 3px; font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
-        .status-live { background: #dcfce7; color: var(--green); }
-        .status-idle { background: #f3f4f6; color: var(--gray); }
+        .status-ok {
+            color: var(--green);
+            font-weight: 600;
+            font-size: 13px;
+        }
+        .status-regressed {
+            color: var(--red);
+            font-weight: 600;
+            font-size: 13px;
+        }
 
-        /* Footer */
-        .footer { text-align: center; padding: 30px 20px; border-top: 3px double var(--black); margin-top: 40px; font-family: 'Inter', sans-serif; font-size: 11px; color: var(--light-gray); text-transform: uppercase; letter-spacing: 2px; }
+        /* ================================================================
+           CHARTS
+           ================================================================ */
+        .chart-area {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            padding: 20px;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+            transition: background 0.3s ease;
+        }
+        .chart-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+        .chart-area svg {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
 
-        .loading { text-align: center; padding: 60px 20px; font-family: 'Inter', sans-serif; font-size: 14px; color: var(--gray); }
+        /* ================================================================
+           PROGRESS BARS
+           ================================================================ */
+        .progress-section {
+            margin-bottom: 40px;
+        }
+        .progress-item {
+            margin-bottom: 16px;
+        }
+        .progress-label {
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .progress-bar-track {
+            background: var(--progress-bg);
+            border-radius: 4px;
+            height: 28px;
+            overflow: hidden;
+            position: relative;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            color: #fff;
+            transition: width 0.6s ease;
+            min-width: 48px;
+        }
+        .progress-bar-fill.green { background: var(--green); }
+        .progress-bar-fill.blue  { background: var(--blue);  }
 
-        .commit-hash { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; background: #f3f4f6; padding: 2px 6px; border-radius: 3px; }
+        /* ================================================================
+           STATUS BADGES
+           ================================================================ */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 3px;
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .status-live {
+            background: var(--green-bg);
+            color: var(--green);
+            border: 1px solid var(--green-border);
+        }
+        .status-idle {
+            background: var(--badge-idle-bg);
+            color: var(--badge-idle-text);
+            border: 1px solid var(--border);
+        }
 
-        .regression-warn { background: #fef2f2; border: 1px solid #fecaca; padding: 12px 16px; margin: 8px 0; font-family: 'Inter', sans-serif; font-size: 13px; color: var(--red); border-radius: 4px; }
-        .regression-ok { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px 16px; margin: 8px 0; font-family: 'Inter', sans-serif; font-size: 13px; color: var(--green); border-radius: 4px; }
+        /* ================================================================
+           INFO BOX
+           ================================================================ */
+        .info-box {
+            background: var(--info-bg);
+            border: 1px solid var(--info-border);
+            padding: 20px 24px;
+            margin-top: 24px;
+            margin-bottom: 40px;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            transition: background 0.3s ease;
+        }
+
+        /* ================================================================
+           REGRESSION SUMMARY
+           ================================================================ */
+        .regression-summary {
+            padding: 14px 18px;
+            margin: 8px 0 30px;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            border-radius: 4px;
+        }
+        .regression-summary.ok {
+            background: var(--green-bg);
+            border: 1px solid var(--green-border);
+            color: var(--green);
+        }
+        .regression-summary.warn {
+            background: var(--red-bg);
+            border: 1px solid var(--red-border);
+            color: var(--red);
+        }
+
+        /* ================================================================
+           LOADING / EMPTY STATE
+           ================================================================ */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            font-family: 'Inter', sans-serif;
+        }
+        .empty-state .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.4;
+        }
+        .empty-state .empty-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+        .empty-state .empty-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+            max-width: 420px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* ================================================================
+           FOOTER
+           ================================================================ */
+        .footer {
+            text-align: center;
+            padding: 30px 20px;
+            border-top: 3px double var(--text);
+            margin-top: 40px;
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: border-color 0.3s ease;
+        }
+        .footer a { color: var(--text-muted); }
+        .footer a:hover { color: var(--text); }
+
+        /* ================================================================
+           PRINT
+           ================================================================ */
+        @media print {
+            html, body { background: #fff !important; color: #000 !important; }
+            [data-theme="dark"] { --bg: #fff; --bg-card: #fff; --text: #000; --text-secondary: #333; --text-muted: #666; --border: #ccc; --border-light: #ddd; }
+            .theme-toggle, .nav { display: none !important; }
+            .section { display: block !important; opacity: 1 !important; page-break-inside: avoid; }
+            .card { box-shadow: none !important; border: 1px solid #ccc !important; }
+            .chart-area { page-break-inside: avoid; }
+            .footer { border-top: 1px solid #ccc; }
+        }
+
+        /* ================================================================
+           RESPONSIVE
+           ================================================================ */
+        @media (max-width: 600px) {
+            .masthead h1 { font-size: 26px; }
+            .nav-item { padding: 10px 14px; font-size: 11px; }
+            .hero-grade .grade-letter { font-size: 80px; }
+            .card-value { font-size: 24px; }
+            .card-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+            table { font-size: 12px; }
+            td, th { padding: 6px 8px; }
+        }
     </style>
 </head>
 <body>
 
+<!-- ================================================================
+     MASTHEAD
+     ================================================================ -->
 <header class="masthead">
+    <button class="theme-toggle" id="themeToggle" title="Toggle dark/light mode" aria-label="Toggle theme"></button>
     <h1>Anti-MicroStrategy</h1>
     <div class="subtitle">AI-Powered BTC Short Desk &mdash; Calibration Dashboard</div>
 </header>
 
-<nav class="nav">
+<!-- ================================================================
+     NAVIGATION
+     ================================================================ -->
+<nav class="nav" id="mainNav">
     <div class="nav-item active" data-tab="overview">Overview</div>
     <div class="nav-item" data-tab="benchmarks">Benchmarks</div>
     <div class="nav-item" data-tab="calibration">Calibration History</div>
     <div class="nav-item" data-tab="live">Live Status</div>
 </nav>
 
+<!-- ================================================================
+     CONTENT
+     ================================================================ -->
 <div class="container">
 
-    <!-- OVERVIEW TAB -->
-    <div id="overview" class="section active">
-        <div class="section-header">Latest Calibration</div>
+    <!-- ============================================================
+         TAB 1: OVERVIEW
+         ============================================================ -->
+    <div id="overview" class="section active fade-in">
+        <div id="hero-grade" class="hero-grade">
+            <div class="loading">Loading calibration data&hellip;</div>
+        </div>
+
+        <div class="section-header">Key Metrics</div>
         <div id="overview-cards" class="card-grid">
-            <div class="loading">Loading calibration data...</div>
-        </div>
-
-        <div class="section-header">Performance Over Time</div>
-        <div class="chart-area">
-            <div class="chart-title">Alpha vs Buy-and-Hold (% per fold)</div>
-            <canvas id="alpha-chart"></canvas>
-        </div>
-    </div>
-
-    <!-- BENCHMARKS TAB -->
-    <div id="benchmarks" class="section">
-        <div class="section-header">Benchmark Results</div>
-        <div id="benchmark-cards" class="card-grid">
-            <div class="loading">Loading benchmark data...</div>
-        </div>
-
-        <div class="section-header">Fold-by-Fold Breakdown</div>
-        <div id="benchmark-table-container">
-            <div class="loading">Loading...</div>
-        </div>
-    </div>
-
-    <!-- CALIBRATION HISTORY TAB -->
-    <div id="calibration" class="section">
-        <div class="section-header">Calibration History (Event-Sourced via Git)</div>
-        <p style="font-family:'Inter',sans-serif;font-size:13px;color:var(--gray);margin-bottom:20px;">
-            Each commit triggers a backtest run. Results are recorded here as an audit trail.
-            Regressions in alpha are flagged.
-        </p>
-        <div id="calibration-table-container">
-            <div class="loading">Loading calibration history...</div>
+            <div class="loading">Loading&hellip;</div>
         </div>
 
         <div class="section-header">Alpha Trend</div>
         <div class="chart-area">
-            <div class="chart-title">Avg Alpha % by Commit</div>
-            <canvas id="calibration-chart"></canvas>
+            <div class="chart-title">Avg Alpha % Over Commits</div>
+            <div id="alpha-trend-chart"></div>
+        </div>
+
+        <div class="section-header">Win Rate Trend</div>
+        <div class="chart-area">
+            <div class="chart-title">Win Rate % Over Commits</div>
+            <div id="winrate-sparkline-chart"></div>
         </div>
     </div>
 
-    <!-- LIVE STATUS TAB -->
+    <!-- ============================================================
+         TAB 2: BENCHMARKS
+         ============================================================ -->
+    <div id="benchmarks" class="section">
+        <div class="section-header">Latest Benchmark</div>
+        <p class="section-desc">
+            The latest backtest results from the most recent commit.
+        </p>
+        <div id="benchmark-cards" class="card-grid">
+            <div class="loading">Loading benchmark data&hellip;</div>
+        </div>
+
+        <div class="section-header">Performance Bars</div>
+        <div id="benchmark-bars" class="progress-section">
+            <div class="loading">Loading&hellip;</div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         TAB 3: CALIBRATION HISTORY
+         ============================================================ -->
+    <div id="calibration" class="section">
+        <div class="section-header">Calibration History (Event-Sourced via Git)</div>
+        <p class="section-desc">
+            Each commit triggers a backtest. Results are event-sourced via git for full audit trail. Regressions are flagged.
+        </p>
+
+        <div id="regression-summary"></div>
+
+        <div id="calibration-table-container">
+            <div class="loading">Loading calibration history&hellip;</div>
+        </div>
+
+        <div class="section-header">Cumulative Alpha</div>
+        <div class="chart-area">
+            <div class="chart-title">Running Sum of Alpha % Across Calibration Runs</div>
+            <div id="cumulative-alpha-chart"></div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         TAB 4: LIVE STATUS
+         ============================================================ -->
     <div id="live" class="section">
         <div class="section-header">Live Agent Status</div>
         <div class="card-grid">
@@ -140,234 +668,606 @@
             </div>
             <div class="card">
                 <div class="card-label">Mode</div>
-                <div class="card-value" style="font-size:24px;">Testnet</div>
+                <div class="card-value" style="font-size:22px;">Testnet</div>
                 <div class="card-sub">Deribit testnet (paper trading)</div>
             </div>
+            <div class="card">
+                <div class="card-label">Last Activity</div>
+                <div class="card-value" style="font-size:22px;">N/A</div>
+                <div class="card-sub">No trades recorded yet</div>
+            </div>
         </div>
-        <div style="background:var(--white);border:1px solid var(--border);padding:20px;margin-top:20px;">
-            <p style="font-family:'Inter',sans-serif;font-size:13px;color:var(--gray);">
-                The live status page updates when the agent is running in <code>--loop</code> mode.
-                Start the agent with <code>python run.py --loop</code> and this page will reflect real-time
-                positions, recent trades, and agent decisions.
-            </p>
+
+        <div class="info-box">
+            <strong>How to activate live mode:</strong><br><br>
+            The live status page updates when the agent is running in <code>--loop</code> mode.
+            Start the agent with <code>python run.py --loop</code> and this page will reflect real-time
+            positions, recent trades, and agent decisions.<br><br>
+            Live data integration is planned for a future release. Until then, all signals come from the backtest calibration pipeline.
         </div>
     </div>
 
 </div>
 
+<!-- ================================================================
+     FOOTER
+     ================================================================ -->
 <footer class="footer">
-    Anti-MicroStrategy &bull; Powered by Claude &bull; <a href="https://github.com/miguelemosreverte/anti-microstrategy-claude" style="color:var(--light-gray);">GitHub</a>
+    Anti-MicroStrategy &bull; Powered by Claude &bull; <a href="https://github.com/miguelemosreverte/anti-microstrategy-claude">GitHub</a>
 </footer>
 
+<!-- ================================================================
+     JAVASCRIPT — Inline, no external dependencies
+     ================================================================ -->
 <script>
-// Tab navigation
-document.querySelectorAll('.nav-item').forEach(item => {
-    item.addEventListener('click', () => {
-        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        item.classList.add('active');
-        document.getElementById(item.dataset.tab).classList.add('active');
-    });
-});
+(function () {
+    'use strict';
 
-// Load calibration data
-async function loadCalibration() {
-    try {
-        const resp = await fetch('calibration.json');
-        if (!resp.ok) throw new Error('No calibration data yet');
-        const data = await resp.json();
-        if (!data.length) throw new Error('Empty calibration');
-        renderOverview(data);
-        renderBenchmarks(data);
-        renderCalibrationHistory(data);
-        renderCharts(data);
-    } catch (e) {
-        document.getElementById('overview-cards').innerHTML =
-            '<div class="card" style="grid-column:1/-1;"><div class="card-label">No Data Yet</div><div class="card-sub">Run a backtest to generate calibration data: <code>python -m backtest.run_backtest</code></div></div>';
-        document.getElementById('benchmark-cards').innerHTML =
-            '<div class="loading">No benchmark data yet. Run a backtest first.</div>';
-        document.getElementById('calibration-table-container').innerHTML =
-            '<div class="loading">No calibration history yet. Each commit will record results here.</div>';
-    }
-}
+    /* ==============================================================
+       DARK / LIGHT MODE TOGGLE
+       ============================================================== */
+    const toggle = document.getElementById('themeToggle');
+    const html = document.documentElement;
 
-function renderOverview(data) {
-    const latest = data[data.length - 1];
-    const trend = data.length >= 2 ? (latest.avg_alpha_pct >= data[data.length - 2].avg_alpha_pct ? 'improving' : 'regressing') : 'first run';
-    const alphaClass = latest.avg_alpha_pct > 0 ? 'positive' : 'negative';
-
-    document.getElementById('overview-cards').innerHTML = `
-        <div class="card">
-            <div class="card-label">Latest Alpha</div>
-            <div class="card-value ${alphaClass}">${latest.avg_alpha_pct > 0 ? '+' : ''}${latest.avg_alpha_pct.toFixed(2)}%</div>
-            <div class="card-sub">vs buy-and-hold</div>
-        </div>
-        <div class="card">
-            <div class="card-label">Win Rate</div>
-            <div class="card-value ${latest.win_rate_pct >= 50 ? 'positive' : 'negative'}">${latest.win_rate_pct}%</div>
-            <div class="card-sub">profitable folds</div>
-        </div>
-        <div class="card">
-            <div class="card-label">Alpha+ Rate</div>
-            <div class="card-value ${latest.alpha_positive_rate_pct >= 50 ? 'positive' : 'negative'}">${latest.alpha_positive_rate_pct}%</div>
-            <div class="card-sub">folds beating BTC</div>
-        </div>
-        <div class="card">
-            <div class="card-label">Calibration Runs</div>
-            <div class="card-value">${data.length}</div>
-            <div class="card-sub">Trend: ${trend}</div>
-        </div>
-    `;
-}
-
-function renderBenchmarks(data) {
-    const latest = data[data.length - 1];
-    document.getElementById('benchmark-cards').innerHTML = `
-        <div class="card">
-            <div class="card-label">Avg Alpha</div>
-            <div class="card-value ${latest.avg_alpha_pct > 0 ? 'positive' : 'negative'}">${latest.avg_alpha_pct > 0 ? '+' : ''}${latest.avg_alpha_pct.toFixed(2)}%</div>
-        </div>
-        <div class="card">
-            <div class="card-label">Win Rate</div>
-            <div class="card-value">${latest.win_rate_pct}%</div>
-        </div>
-        <div class="card">
-            <div class="card-label">Total Trades</div>
-            <div class="card-value">${latest.total_trades}</div>
-        </div>
-        <div class="card">
-            <div class="card-label">Commit</div>
-            <div class="card-value" style="font-size:18px;"><span class="commit-hash">${latest.commit}</span></div>
-            <div class="card-sub">${latest.timestamp.slice(0, 10)}</div>
-        </div>
-    `;
-}
-
-function renderCalibrationHistory(data) {
-    let rows = '';
-    for (let i = data.length - 1; i >= 0; i--) {
-        const d = data[i];
-        const regression = i > 0 && d.avg_alpha_pct < data[i - 1].avg_alpha_pct;
-        const alphaClass = d.avg_alpha_pct > 0 ? 'positive' : 'negative';
-        rows += `<tr>
-            <td><span class="commit-hash">${d.commit}</span></td>
-            <td style="font-size:12px;">${d.timestamp.slice(0, 16)}</td>
-            <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.message}</td>
-            <td class="num ${alphaClass}">${d.avg_alpha_pct > 0 ? '+' : ''}${d.avg_alpha_pct.toFixed(2)}%</td>
-            <td class="num">${d.win_rate_pct}%</td>
-            <td class="num">${d.total_trades}</td>
-            <td>${regression ? '<span style="color:var(--red);">&#9660; regressed</span>' : '<span style="color:var(--green);">&#9650; ok</span>'}</td>
-        </tr>`;
+    function applyTheme(theme) {
+        html.setAttribute('data-theme', theme);
+        toggle.textContent = theme === 'dark' ? '\u263E' : '\u2600'; // moon : sun
+        localStorage.setItem('theme', theme);
     }
 
-    document.getElementById('calibration-table-container').innerHTML = `
-        <table>
-            <thead><tr>
-                <th>Commit</th><th>Date</th><th>Message</th>
-                <th class="num">Alpha</th><th class="num">Win Rate</th>
-                <th class="num">Trades</th><th>Status</th>
-            </tr></thead>
-            <tbody>${rows}</tbody>
-        </table>
-    `;
-}
-
-function renderCharts(data) {
-    // Simple canvas charts (no external dependencies)
-    drawLineChart('alpha-chart', data.map(d => d.avg_alpha_pct), data.map(d => d.commit));
-    drawLineChart('calibration-chart', data.map(d => d.avg_alpha_pct), data.map(d => d.commit));
-}
-
-function drawLineChart(canvasId, values, labels) {
-    const canvas = document.getElementById(canvasId);
-    if (!canvas || !values.length) return;
-    const ctx = canvas.getContext('2d');
-    const W = canvas.parentElement.clientWidth - 40;
-    const H = 260;
-    canvas.width = W * 2;
-    canvas.height = H * 2;
-    canvas.style.width = W + 'px';
-    canvas.style.height = H + 'px';
-    ctx.scale(2, 2);
-
-    const pad = { top: 20, right: 20, bottom: 40, left: 50 };
-    const plotW = W - pad.left - pad.right;
-    const plotH = H - pad.top - pad.bottom;
-
-    const minV = Math.min(0, ...values);
-    const maxV = Math.max(0, ...values);
-    const range = maxV - minV || 1;
-
-    // Grid
-    ctx.strokeStyle = '#eee';
-    ctx.lineWidth = 0.5;
-    for (let i = 0; i <= 4; i++) {
-        const y = pad.top + (plotH / 4) * i;
-        ctx.beginPath();
-        ctx.moveTo(pad.left, y);
-        ctx.lineTo(W - pad.right, y);
-        ctx.stroke();
-        const val = maxV - (range / 4) * i;
-        ctx.fillStyle = '#999';
-        ctx.font = '10px Inter, sans-serif';
-        ctx.textAlign = 'right';
-        ctx.fillText(val.toFixed(2) + '%', pad.left - 5, y + 4);
-    }
-
-    // Zero line
-    const zeroY = pad.top + plotH * (maxV / range);
-    ctx.strokeStyle = '#ccc';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(pad.left, zeroY);
-    ctx.lineTo(W - pad.right, zeroY);
-    ctx.stroke();
-
-    // Line
-    if (values.length === 1) {
-        const x = pad.left + plotW / 2;
-        const y = pad.top + plotH * ((maxV - values[0]) / range);
-        ctx.fillStyle = values[0] >= 0 ? '#15803d' : '#b91c1c';
-        ctx.beginPath();
-        ctx.arc(x, y, 5, 0, Math.PI * 2);
-        ctx.fill();
-    } else {
-        ctx.strokeStyle = '#1e40af';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        values.forEach((v, i) => {
-            const x = pad.left + (plotW / (values.length - 1)) * i;
-            const y = pad.top + plotH * ((maxV - v) / range);
-            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-        });
-        ctx.stroke();
-
-        // Dots
-        values.forEach((v, i) => {
-            const x = pad.left + (plotW / (values.length - 1)) * i;
-            const y = pad.top + plotH * ((maxV - v) / range);
-            ctx.fillStyle = v >= 0 ? '#15803d' : '#b91c1c';
-            ctx.beginPath();
-            ctx.arc(x, y, 4, 0, Math.PI * 2);
-            ctx.fill();
-        });
-    }
-
-    // X labels
-    ctx.fillStyle = '#999';
-    ctx.font = '10px Inter, sans-serif';
-    ctx.textAlign = 'center';
-    const step = Math.max(1, Math.floor(labels.length / 8));
-    labels.forEach((l, i) => {
-        if (i % step === 0 || i === labels.length - 1) {
-            const x = values.length === 1 ? pad.left + plotW / 2 : pad.left + (plotW / (values.length - 1)) * i;
-            ctx.fillText(l, x, H - pad.bottom + 16);
+    // Initialize: check localStorage, then system preference
+    (function initTheme() {
+        const stored = localStorage.getItem('theme');
+        if (stored) {
+            applyTheme(stored);
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            applyTheme('dark');
+        } else {
+            applyTheme('light');
         }
-    });
-}
+    })();
 
-// Load data on page load
-loadCalibration();
+    toggle.addEventListener('click', function () {
+        var current = html.getAttribute('data-theme') || 'light';
+        applyTheme(current === 'dark' ? 'light' : 'dark');
+    });
+
+    /* ==============================================================
+       TAB NAVIGATION
+       ============================================================== */
+    var navItems = document.querySelectorAll('.nav-item');
+    var sections = document.querySelectorAll('.section');
+
+    navItems.forEach(function (item) {
+        item.addEventListener('click', function () {
+            navItems.forEach(function (i) { i.classList.remove('active'); });
+            sections.forEach(function (s) {
+                s.classList.remove('active');
+                s.classList.remove('fade-in');
+            });
+            item.classList.add('active');
+            var target = document.getElementById(item.dataset.tab);
+            target.classList.add('active');
+            // Trigger fade-in on next frame
+            requestAnimationFrame(function () {
+                requestAnimationFrame(function () {
+                    target.classList.add('fade-in');
+                });
+            });
+        });
+    });
+
+    /* ==============================================================
+       HELPER: Escape HTML
+       ============================================================== */
+    function esc(s) {
+        var d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+
+    /* ==============================================================
+       GRADE COMPUTATION
+       ============================================================== */
+    function computeGrade(alpha) {
+        if (alpha > 5)  return { letter: 'A+', cls: 'positive' };
+        if (alpha > 3)  return { letter: 'A',  cls: 'positive' };
+        if (alpha > 1)  return { letter: 'B',  cls: 'positive' };
+        if (alpha > 0)  return { letter: 'C',  cls: 'positive' };
+        if (alpha > -2) return { letter: 'D',  cls: 'negative' };
+        return              { letter: 'F',  cls: 'negative' };
+    }
+
+    /* ==============================================================
+       TREND COMPUTATION
+       ============================================================== */
+    function computeTrend(data) {
+        if (data.length < 2) return { label: 'First Run', arrow: '' };
+        var last = data[data.length - 1].avg_alpha_pct;
+        var prev = data[data.length - 2].avg_alpha_pct;
+        if (last > prev + 0.1) return { label: 'Improving', arrow: '\u25B2' };  // up triangle
+        if (last < prev - 0.1) return { label: 'Regressing', arrow: '\u25BC' }; // down triangle
+        return { label: 'Stable', arrow: '\u25C6' }; // diamond
+    }
+
+    function trendClass(data) {
+        if (data.length < 2) return '';
+        var last = data[data.length - 1].avg_alpha_pct;
+        var prev = data[data.length - 2].avg_alpha_pct;
+        if (last > prev + 0.1) return 'positive';
+        if (last < prev - 0.1) return 'negative';
+        return '';
+    }
+
+    /* ==============================================================
+       SVG CHART UTILITIES
+       ============================================================== */
+    function svgEl(tag, attrs, content) {
+        var parts = ['<' + tag];
+        if (attrs) {
+            Object.keys(attrs).forEach(function (k) {
+                parts.push(' ' + k + '="' + attrs[k] + '"');
+            });
+        }
+        if (content !== undefined && content !== null) {
+            parts.push('>' + content + '</' + tag + '>');
+        } else {
+            parts.push('/>');
+        }
+        return parts.join('');
+    }
+
+    /* ----------------------------------------------------------
+       Alpha Trend Chart (main chart, ~800x250)
+       Line + dots + zero line + green/red fill areas
+       ---------------------------------------------------------- */
+    function renderAlphaTrendChart(container, data) {
+        if (!data.length) { container.innerHTML = '<div class="loading">No data</div>'; return; }
+
+        var W = 800, H = 250;
+        var pad = { top: 24, right: 24, bottom: 44, left: 56 };
+        var plotW = W - pad.left - pad.right;
+        var plotH = H - pad.top - pad.bottom;
+        var values = data.map(function (d) { return d.avg_alpha_pct; });
+        var labels = data.map(function (d) { return d.commit; });
+        var n = values.length;
+
+        var minV = Math.min(0, Math.min.apply(null, values));
+        var maxV = Math.max(0, Math.max.apply(null, values));
+        var rangeV = (maxV - minV) || 1;
+        // Add 10% padding
+        var padV = rangeV * 0.1;
+        minV -= padV;
+        maxV += padV;
+        rangeV = maxV - minV;
+
+        function xPos(i) { return pad.left + (n === 1 ? plotW / 2 : (plotW / (n - 1)) * i); }
+        function yPos(v) { return pad.top + plotH * ((maxV - v) / rangeV); }
+
+        var zeroY = yPos(0);
+        var parts = [];
+
+        // viewBox for responsiveness
+        parts.push('<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;">');
+
+        // Y-axis grid + labels
+        var ySteps = 5;
+        for (var gi = 0; gi <= ySteps; gi++) {
+            var gv = maxV - (rangeV / ySteps) * gi;
+            var gy = yPos(gv);
+            parts.push(svgEl('line', { x1: pad.left, y1: gy, x2: W - pad.right, y2: gy, stroke: 'var(--chart-grid)', 'stroke-width': 0.5 }));
+            parts.push(svgEl('text', { x: pad.left - 8, y: gy + 4, 'text-anchor': 'end', fill: 'var(--text-muted)', 'font-family': 'Inter, sans-serif', 'font-size': 10 }, gv.toFixed(1) + '%'));
+        }
+
+        // Zero line (dashed)
+        if (zeroY >= pad.top && zeroY <= pad.top + plotH) {
+            parts.push(svgEl('line', { x1: pad.left, y1: zeroY, x2: W - pad.right, y2: zeroY, stroke: 'var(--chart-zero)', 'stroke-width': 1.5, 'stroke-dasharray': '6,4' }));
+        }
+
+        // Build the line path + fill paths
+        if (n === 1) {
+            // Single point: just a dot
+            var cx = xPos(0), cy = yPos(values[0]);
+            var dotColor = values[0] >= 0 ? 'var(--green)' : 'var(--red)';
+            parts.push(svgEl('circle', { cx: cx, cy: cy, r: 6, fill: dotColor }));
+        } else {
+            // Build coordinate arrays
+            var coords = [];
+            for (var ci = 0; ci < n; ci++) {
+                coords.push({ x: xPos(ci), y: yPos(values[ci]) });
+            }
+
+            // Line path
+            var linePath = 'M' + coords.map(function (c) { return c.x + ',' + c.y; }).join(' L');
+
+            // Green fill (above zero): clip area to above zero line
+            var greenFillPath = linePath;
+            greenFillPath += ' L' + coords[n - 1].x + ',' + zeroY;
+            greenFillPath += ' L' + coords[0].x + ',' + zeroY + ' Z';
+            // Clip to only the area above zero
+            var clipAboveId = 'clip-above-' + Math.random().toString(36).substr(2, 6);
+            parts.push('<defs>');
+            parts.push('<clipPath id="' + clipAboveId + '">');
+            parts.push(svgEl('rect', { x: pad.left, y: pad.top, width: plotW, height: Math.max(0, zeroY - pad.top) }));
+            parts.push('</clipPath>');
+            var clipBelowId = 'clip-below-' + Math.random().toString(36).substr(2, 6);
+            parts.push('<clipPath id="' + clipBelowId + '">');
+            parts.push(svgEl('rect', { x: pad.left, y: zeroY, width: plotW, height: Math.max(0, pad.top + plotH - zeroY) }));
+            parts.push('</clipPath>');
+            parts.push('</defs>');
+
+            // Green fill above zero
+            parts.push(svgEl('path', { d: greenFillPath, fill: 'var(--chart-green)', 'clip-path': 'url(#' + clipAboveId + ')' }));
+            // Red fill below zero
+            parts.push(svgEl('path', { d: greenFillPath, fill: 'var(--chart-red)', 'clip-path': 'url(#' + clipBelowId + ')' }));
+
+            // Line
+            parts.push(svgEl('path', { d: linePath, fill: 'none', stroke: 'var(--chart-line)', 'stroke-width': 2.5, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
+
+            // Dots
+            for (var di = 0; di < n; di++) {
+                var dc = values[di] >= 0 ? 'var(--green)' : 'var(--red)';
+                parts.push(svgEl('circle', { cx: coords[di].x, cy: coords[di].y, r: 4, fill: dc, stroke: 'var(--bg-card)', 'stroke-width': 1.5 }));
+            }
+        }
+
+        // X-axis labels (commit hashes, every Nth)
+        var step = Math.max(1, Math.floor(n / 8));
+        for (var li = 0; li < n; li++) {
+            if (li % step === 0 || li === n - 1) {
+                var lx = xPos(li);
+                parts.push(svgEl('text', { x: lx, y: H - pad.bottom + 18, 'text-anchor': 'middle', fill: 'var(--text-muted)', 'font-family': "'SF Mono', 'Fira Code', monospace", 'font-size': 9 }, esc(labels[li])));
+            }
+        }
+
+        parts.push('</svg>');
+        container.innerHTML = parts.join('');
+    }
+
+    /* ----------------------------------------------------------
+       Sparkline Chart (~full width x 80)
+       Simple line + dots, no axis labels
+       ---------------------------------------------------------- */
+    function renderSparkline(container, values, opts) {
+        if (!values.length) { container.innerHTML = '<div class="loading">No data</div>'; return; }
+        opts = opts || {};
+        var W = opts.width || 800, H = opts.height || 100;
+        var pad = { top: 12, right: 16, bottom: 12, left: 16 };
+        var plotW = W - pad.left - pad.right;
+        var plotH = H - pad.top - pad.bottom;
+        var n = values.length;
+
+        var minV = Math.min.apply(null, values);
+        var maxV = Math.max.apply(null, values);
+        var rangeV = (maxV - minV) || 1;
+        var padV = rangeV * 0.15;
+        minV -= padV; maxV += padV; rangeV = maxV - minV;
+
+        function xPos(i) { return pad.left + (n === 1 ? plotW / 2 : (plotW / (n - 1)) * i); }
+        function yPos(v) { return pad.top + plotH * ((maxV - v) / rangeV); }
+
+        var parts = [];
+        parts.push('<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;">');
+
+        if (n === 1) {
+            parts.push(svgEl('circle', { cx: xPos(0), cy: yPos(values[0]), r: 4, fill: 'var(--chart-line)' }));
+        } else {
+            var coords = [];
+            for (var i = 0; i < n; i++) { coords.push({ x: xPos(i), y: yPos(values[i]) }); }
+            var linePath = 'M' + coords.map(function (c) { return c.x + ',' + c.y; }).join(' L');
+
+            // Fill
+            var fillPath = linePath + ' L' + coords[n-1].x + ',' + (pad.top + plotH) + ' L' + coords[0].x + ',' + (pad.top + plotH) + ' Z';
+            parts.push(svgEl('path', { d: fillPath, fill: 'var(--chart-green)', opacity: '0.4' }));
+            parts.push(svgEl('path', { d: linePath, fill: 'none', stroke: 'var(--chart-line)', 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
+
+            for (var j = 0; j < n; j++) {
+                parts.push(svgEl('circle', { cx: coords[j].x, cy: coords[j].y, r: 3, fill: 'var(--chart-line)', stroke: 'var(--bg-card)', 'stroke-width': 1 }));
+            }
+        }
+        parts.push('</svg>');
+        container.innerHTML = parts.join('');
+    }
+
+    /* ----------------------------------------------------------
+       Cumulative Alpha Chart
+       ---------------------------------------------------------- */
+    function renderCumulativeAlphaChart(container, data) {
+        if (!data.length) { container.innerHTML = '<div class="loading">No data</div>'; return; }
+
+        var W = 800, H = 250;
+        var pad = { top: 24, right: 24, bottom: 44, left: 56 };
+        var plotW = W - pad.left - pad.right;
+        var plotH = H - pad.top - pad.bottom;
+
+        var cumValues = [];
+        var sum = 0;
+        for (var ci = 0; ci < data.length; ci++) {
+            sum += data[ci].avg_alpha_pct;
+            cumValues.push(sum);
+        }
+        var labels = data.map(function (d) { return d.commit; });
+        var n = cumValues.length;
+
+        var minV = Math.min(0, Math.min.apply(null, cumValues));
+        var maxV = Math.max(0, Math.max.apply(null, cumValues));
+        var rangeV = (maxV - minV) || 1;
+        var padV = rangeV * 0.1;
+        minV -= padV; maxV += padV; rangeV = maxV - minV;
+
+        function xPos(i) { return pad.left + (n === 1 ? plotW / 2 : (plotW / (n - 1)) * i); }
+        function yPos(v) { return pad.top + plotH * ((maxV - v) / rangeV); }
+
+        var zeroY = yPos(0);
+        var parts = [];
+        parts.push('<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;">');
+
+        // Y grid
+        var ySteps = 5;
+        for (var gi = 0; gi <= ySteps; gi++) {
+            var gv = maxV - (rangeV / ySteps) * gi;
+            var gy = yPos(gv);
+            parts.push(svgEl('line', { x1: pad.left, y1: gy, x2: W - pad.right, y2: gy, stroke: 'var(--chart-grid)', 'stroke-width': 0.5 }));
+            parts.push(svgEl('text', { x: pad.left - 8, y: gy + 4, 'text-anchor': 'end', fill: 'var(--text-muted)', 'font-family': 'Inter, sans-serif', 'font-size': 10 }, gv.toFixed(1) + '%'));
+        }
+
+        // Zero line
+        if (zeroY >= pad.top && zeroY <= pad.top + plotH) {
+            parts.push(svgEl('line', { x1: pad.left, y1: zeroY, x2: W - pad.right, y2: zeroY, stroke: 'var(--chart-zero)', 'stroke-width': 1.5, 'stroke-dasharray': '6,4' }));
+        }
+
+        if (n === 1) {
+            var dotColor = cumValues[0] >= 0 ? 'var(--green)' : 'var(--red)';
+            parts.push(svgEl('circle', { cx: xPos(0), cy: yPos(cumValues[0]), r: 6, fill: dotColor }));
+        } else {
+            var coords = [];
+            for (var i = 0; i < n; i++) { coords.push({ x: xPos(i), y: yPos(cumValues[i]) }); }
+            var linePath = 'M' + coords.map(function (c) { return c.x + ',' + c.y; }).join(' L');
+
+            // Fill area
+            var fillPath = linePath + ' L' + coords[n - 1].x + ',' + zeroY + ' L' + coords[0].x + ',' + zeroY + ' Z';
+
+            var clipAboveId = 'cum-clip-above-' + Math.random().toString(36).substr(2, 6);
+            var clipBelowId = 'cum-clip-below-' + Math.random().toString(36).substr(2, 6);
+            parts.push('<defs>');
+            parts.push('<clipPath id="' + clipAboveId + '"><rect x="' + pad.left + '" y="' + pad.top + '" width="' + plotW + '" height="' + Math.max(0, zeroY - pad.top) + '"/></clipPath>');
+            parts.push('<clipPath id="' + clipBelowId + '"><rect x="' + pad.left + '" y="' + zeroY + '" width="' + plotW + '" height="' + Math.max(0, pad.top + plotH - zeroY) + '"/></clipPath>');
+            parts.push('</defs>');
+
+            parts.push(svgEl('path', { d: fillPath, fill: 'var(--chart-green)', 'clip-path': 'url(#' + clipAboveId + ')' }));
+            parts.push(svgEl('path', { d: fillPath, fill: 'var(--chart-red)', 'clip-path': 'url(#' + clipBelowId + ')' }));
+            parts.push(svgEl('path', { d: linePath, fill: 'none', stroke: 'var(--green)', 'stroke-width': 2.5, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
+
+            for (var di = 0; di < n; di++) {
+                var dc = cumValues[di] >= 0 ? 'var(--green)' : 'var(--red)';
+                parts.push(svgEl('circle', { cx: coords[di].x, cy: coords[di].y, r: 4, fill: dc, stroke: 'var(--bg-card)', 'stroke-width': 1.5 }));
+            }
+        }
+
+        // X labels
+        var step = Math.max(1, Math.floor(n / 8));
+        for (var li = 0; li < n; li++) {
+            if (li % step === 0 || li === n - 1) {
+                parts.push(svgEl('text', { x: xPos(li), y: H - pad.bottom + 18, 'text-anchor': 'middle', fill: 'var(--text-muted)', 'font-family': "'SF Mono', 'Fira Code', monospace", 'font-size': 9 }, esc(labels[li])));
+            }
+        }
+
+        parts.push('</svg>');
+        container.innerHTML = parts.join('');
+    }
+
+    /* ==============================================================
+       RENDER: OVERVIEW TAB
+       ============================================================== */
+    function renderOverview(data) {
+        var latest = data[data.length - 1];
+        var grade = computeGrade(latest.avg_alpha_pct);
+        var trend = computeTrend(data);
+        var tc = trendClass(data);
+        var alphaClass = latest.avg_alpha_pct >= 0 ? 'positive' : 'negative';
+        var winClass = latest.win_rate_pct >= 50 ? 'positive' : 'negative';
+        var alphaRateClass = latest.alpha_positive_rate_pct >= 50 ? 'positive' : 'negative';
+
+        // Hero grade
+        document.getElementById('hero-grade').innerHTML =
+            '<div class="grade-letter ' + grade.cls + '">' + grade.letter + '</div>' +
+            '<div class="grade-label">Performance Grade</div>' +
+            '<div class="grade-sublabel">Based on latest alpha of ' + (latest.avg_alpha_pct > 0 ? '+' : '') + latest.avg_alpha_pct.toFixed(2) + '% vs buy-and-hold</div>';
+
+        // Metric cards
+        document.getElementById('overview-cards').innerHTML =
+            '<div class="card">' +
+                '<div class="card-label">Latest Alpha</div>' +
+                '<div class="card-value ' + alphaClass + '">' + (latest.avg_alpha_pct > 0 ? '+' : '') + latest.avg_alpha_pct.toFixed(2) + '%</div>' +
+                '<div class="card-sub">vs buy-and-hold</div>' +
+            '</div>' +
+            '<div class="card">' +
+                '<div class="card-label">Win Rate</div>' +
+                '<div class="card-value ' + winClass + '">' + latest.win_rate_pct.toFixed(1) + '%</div>' +
+                '<div class="card-sub">profitable folds</div>' +
+            '</div>' +
+            '<div class="card">' +
+                '<div class="card-label">Alpha+ Rate</div>' +
+                '<div class="card-value ' + alphaRateClass + '">' + latest.alpha_positive_rate_pct.toFixed(1) + '%</div>' +
+                '<div class="card-sub">folds beating BTC</div>' +
+            '</div>' +
+            '<div class="card">' +
+                '<div class="card-label">Calibration Runs</div>' +
+                '<div class="card-value">' + data.length + '</div>' +
+                '<div class="card-sub">total backtests</div>' +
+            '</div>' +
+            '<div class="card">' +
+                '<div class="card-label">Trend</div>' +
+                '<div class="card-value ' + tc + '" style="font-size:24px;">' + trend.arrow + ' ' + trend.label + '</div>' +
+                '<div class="card-sub">vs previous run</div>' +
+            '</div>';
+
+        // Charts
+        renderAlphaTrendChart(document.getElementById('alpha-trend-chart'), data);
+        renderSparkline(document.getElementById('winrate-sparkline-chart'), data.map(function (d) { return d.win_rate_pct; }));
+    }
+
+    /* ==============================================================
+       RENDER: BENCHMARKS TAB
+       ============================================================== */
+    function renderBenchmarks(data) {
+        var latest = data[data.length - 1];
+        var alphaClass = latest.avg_alpha_pct >= 0 ? 'positive' : 'negative';
+        var winClass = latest.win_rate_pct >= 50 ? 'positive' : 'negative';
+        var alphaRateClass = latest.alpha_positive_rate_pct >= 50 ? 'positive' : 'negative';
+
+        document.getElementById('benchmark-cards').innerHTML =
+            '<div class="card">' +
+                '<div class="card-label">Avg Alpha</div>' +
+                '<div class="card-value ' + alphaClass + '">' + (latest.avg_alpha_pct > 0 ? '+' : '') + latest.avg_alpha_pct.toFixed(2) + '%</div>' +
+                '<div class="card-sub">vs buy-and-hold</div>' +
+            '</div>' +
+            '<div class="card">' +
+                '<div class="card-label">Win Rate</div>' +
+                '<div class="card-value ' + winClass + '">' + latest.win_rate_pct.toFixed(1) + '%</div>' +
+                '<div class="card-sub">profitable folds</div>' +
+            '</div>' +
+            '<div class="card">' +
+                '<div class="card-label">Alpha+ Rate</div>' +
+                '<div class="card-value ' + alphaRateClass + '">' + latest.alpha_positive_rate_pct.toFixed(1) + '%</div>' +
+                '<div class="card-sub">folds beating BTC</div>' +
+            '</div>' +
+            '<div class="card">' +
+                '<div class="card-label">Total Trades</div>' +
+                '<div class="card-value">' + latest.total_trades + '</div>' +
+                '<div class="card-sub">across all folds</div>' +
+            '</div>';
+
+        // Progress bars
+        var alphaBarWidth = Math.min(100, Math.max(2, Math.abs(latest.avg_alpha_pct) * 5));
+        var alphaBarColor = latest.avg_alpha_pct >= 0 ? 'green' : 'red';
+        var winBarWidth = Math.min(100, Math.max(2, latest.win_rate_pct));
+        var alphaRateBarWidth = Math.min(100, Math.max(2, latest.alpha_positive_rate_pct));
+
+        document.getElementById('benchmark-bars').innerHTML =
+            '<div class="progress-item">' +
+                '<div class="progress-label">Alpha vs Buy-and-Hold</div>' +
+                '<div class="progress-bar-track">' +
+                    '<div class="progress-bar-fill ' + alphaBarColor + '" style="width:' + alphaBarWidth + '%">' + (latest.avg_alpha_pct > 0 ? '+' : '') + latest.avg_alpha_pct.toFixed(2) + '%</div>' +
+                '</div>' +
+            '</div>' +
+            '<div class="progress-item">' +
+                '<div class="progress-label">Win Rate</div>' +
+                '<div class="progress-bar-track">' +
+                    '<div class="progress-bar-fill green" style="width:' + winBarWidth + '%">' + latest.win_rate_pct.toFixed(1) + '%</div>' +
+                '</div>' +
+            '</div>' +
+            '<div class="progress-item">' +
+                '<div class="progress-label">Alpha+ Rate</div>' +
+                '<div class="progress-bar-track">' +
+                    '<div class="progress-bar-fill blue" style="width:' + alphaRateBarWidth + '%">' + latest.alpha_positive_rate_pct.toFixed(1) + '%</div>' +
+                '</div>' +
+            '</div>';
+    }
+
+    /* ==============================================================
+       RENDER: CALIBRATION HISTORY TAB
+       ============================================================== */
+    function renderCalibrationHistory(data) {
+        var regressions = 0;
+        var rows = '';
+
+        for (var i = data.length - 1; i >= 0; i--) {
+            var d = data[i];
+            var regression = i > 0 && d.avg_alpha_pct < data[i - 1].avg_alpha_pct;
+            if (regression) regressions++;
+            var alphaClass = d.avg_alpha_pct >= 0 ? 'positive' : 'negative';
+            var statusHtml = regression
+                ? '<span class="status-regressed">\u2717 \u25BC regressed</span>'
+                : '<span class="status-ok">\u2713 \u25B2 ok</span>';
+            var dateStr = d.timestamp ? d.timestamp.slice(0, 10) : '';
+
+            rows +=
+                '<tr>' +
+                    '<td><span class="commit-hash">' + esc(d.commit) + '</span></td>' +
+                    '<td style="font-size:12px;white-space:nowrap;">' + esc(dateStr) + '</td>' +
+                    '<td style="font-size:12px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + esc(d.message) + '">' + esc(d.message) + '</td>' +
+                    '<td class="num ' + alphaClass + '">' + (d.avg_alpha_pct > 0 ? '+' : '') + d.avg_alpha_pct.toFixed(2) + '%</td>' +
+                    '<td class="num">' + d.win_rate_pct.toFixed(1) + '%</td>' +
+                    '<td class="num">' + d.total_trades + '</td>' +
+                    '<td>' + statusHtml + '</td>' +
+                '</tr>';
+        }
+
+        // Regression summary
+        var summaryEl = document.getElementById('regression-summary');
+        if (regressions > 0) {
+            summaryEl.className = 'regression-summary warn';
+            summaryEl.innerHTML = '\u26A0 ' + regressions + ' regression' + (regressions > 1 ? 's' : '') + ' detected out of ' + data.length + ' calibration runs.';
+        } else {
+            summaryEl.className = 'regression-summary ok';
+            summaryEl.innerHTML = '\u2713 No regressions detected across ' + data.length + ' calibration run' + (data.length > 1 ? 's' : '') + '. All clear.';
+        }
+
+        document.getElementById('calibration-table-container').innerHTML =
+            '<table>' +
+                '<thead><tr>' +
+                    '<th>Commit</th><th>Date</th><th>Message</th>' +
+                    '<th class="num">Alpha</th><th class="num">Win Rate</th>' +
+                    '<th class="num">Trades</th><th>Status</th>' +
+                '</tr></thead>' +
+                '<tbody>' + rows + '</tbody>' +
+            '</table>';
+
+        // Cumulative alpha chart
+        renderCumulativeAlphaChart(document.getElementById('cumulative-alpha-chart'), data);
+    }
+
+    /* ==============================================================
+       EMPTY STATE
+       ============================================================== */
+    function showEmptyState() {
+        document.getElementById('hero-grade').innerHTML =
+            '<div class="empty-state">' +
+                '<div class="empty-icon">&#x1F4CA;</div>' +
+                '<div class="empty-title">No Calibration Data Yet</div>' +
+                '<div class="empty-desc">Run a backtest to generate calibration data:<br><code>python -m backtest.run_backtest</code><br><br>Each commit that triggers the CI pipeline will record results here automatically.</div>' +
+            '</div>';
+        document.getElementById('overview-cards').innerHTML = '';
+        document.getElementById('alpha-trend-chart').innerHTML = '';
+        document.getElementById('winrate-sparkline-chart').innerHTML = '';
+        document.getElementById('benchmark-cards').innerHTML =
+            '<div class="empty-state" style="grid-column:1/-1;">' +
+                '<div class="empty-title">No Benchmark Data</div>' +
+                '<div class="empty-desc">Benchmark results will appear after the first backtest run.</div>' +
+            '</div>';
+        document.getElementById('benchmark-bars').innerHTML = '';
+        document.getElementById('calibration-table-container').innerHTML =
+            '<div class="empty-state">' +
+                '<div class="empty-title">No Calibration History</div>' +
+                '<div class="empty-desc">Each commit will record backtest results here as an immutable audit trail.</div>' +
+            '</div>';
+        document.getElementById('regression-summary').innerHTML = '';
+        document.getElementById('cumulative-alpha-chart').innerHTML = '';
+    }
+
+    /* ==============================================================
+       LOAD DATA
+       ============================================================== */
+    async function loadCalibration() {
+        try {
+            var resp = await fetch('calibration.json');
+            if (!resp.ok) throw new Error('HTTP ' + resp.status + ': Could not load calibration.json');
+            var data = await resp.json();
+            if (!Array.isArray(data) || data.length === 0) throw new Error('Empty calibration data');
+
+            renderOverview(data);
+            renderBenchmarks(data);
+            renderCalibrationHistory(data);
+        } catch (e) {
+            console.warn('Calibration load error:', e.message);
+            showEmptyState();
+        }
+    }
+
+    loadCalibration();
+
+})();
 </script>
 </body>
 </html>
