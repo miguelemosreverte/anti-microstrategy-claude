@@ -10,6 +10,21 @@ COMMIT_HASH="$(git rev-parse --short HEAD)"
 COMMIT_MSG="$(git log -1 --pretty=%s)"
 TIMESTAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
+# Prevent infinite loop: skip if this is a calibration-only commit
+CHANGED_FILES="$(git diff-tree --no-commit-id --name-only -r HEAD)"
+if echo "${CHANGED_FILES}" | grep -qv "^docs/calibration.json$" 2>/dev/null; then
+    : # At least one non-calibration file changed, proceed
+else
+    echo "  [skip] Only calibration files changed, skipping backtest"
+    exit 0
+fi
+
+# Also skip if env var is set (used to prevent recursion)
+if [ -n "${SKIP_BACKTEST_HOOK}" ]; then
+    exit 0
+fi
+export SKIP_BACKTEST_HOOK=1
+
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  post-commit hook: Running backtest calibration"
