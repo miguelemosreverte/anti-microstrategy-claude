@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Environment
+.env
+*.env.local
+
+# Database
+*.db
+
+# Reports (generated)
+v2-trading-agent/reports/*.html
+
+# Node (v1)
+v1-bear-dao/node_modules/
+v1-bear-dao/cache/
+v1-bear-dao/artifacts/
+v1-bear-dao/typechain-types/
+v1-bear-dao/coverage/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Deribit API reference (generated)
+DERIBIT_API_REFERENCE.md
+v1-bear-dao/package-lock.json
+*.db-shm
+*.db-wal
