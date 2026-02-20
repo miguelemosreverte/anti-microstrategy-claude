@@ -12,16 +12,16 @@ build/
 
 # Database
 *.db
+*.db-shm
+*.db-wal
 
-# Reports (generated)
-v2-trading-agent/reports/*.html
+# Reports (generated, but we commit latest for GitHub Pages)
+reports/*.html
+!reports/.gitkeep
 
-# Node (v1)
-v1-bear-dao/node_modules/
-v1-bear-dao/cache/
-v1-bear-dao/artifacts/
-v1-bear-dao/typechain-types/
-v1-bear-dao/coverage/
+# Datasets (large, re-fetchable)
+datasets/*.json
+!datasets/.gitkeep
 
 # IDE
 .vscode/
@@ -30,8 +30,5 @@ v1-bear-dao/coverage/
 *.swo
 .DS_Store
 
-# Deribit API reference (generated)
-DERIBIT_API_REFERENCE.md
-v1-bear-dao/package-lock.json
-*.db-shm
-*.db-wal
+# OS
+Thumbs.db

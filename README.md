@@ -1,10 +1,8 @@
 # Anti-MicroStrategy: AI-Powered BTC Short Desk
 
-An autonomous trading agent powered by Claude that shorts Bitcoin on [Deribit](https://www.deribit.com), guided by the thesis that BTC is fundamentally overvalued and headed toward zero. The inverse of MicroStrategy's strategy — instead of accumulating Bitcoin, we bet against it.
+An autonomous trading agent powered by Claude that shorts Bitcoin on [Deribit](https://www.deribit.com), guided by the thesis that BTC is fundamentally overvalued. The inverse of MicroStrategy's strategy.
 
-> **v1** (`v1-bear-dao/`): Solidity smart contracts for a gold-accumulating DAO (PAXG vault on Ethereum)
->
-> **v2** (`v2-trading-agent/`): **Active** — Claude-powered trading agent that shorts BTC on Deribit
+**Live Dashboard:** [GitHub Pages](https://miguelemosreverte.github.io/anti-microstrategy-claude/)
 
 ---
 
@@ -12,7 +10,7 @@ An autonomous trading agent powered by Claude that shorts Bitcoin on [Deribit](h
 
 ```
 ┌──────────────────┐     ┌───────────────────┐     ┌─────────────┐
-│  Market Data     │────▶│  Claude Agent      │────▶│  Deribit    │
+│  Market Data     │────>│  Claude Agent      │────>│  Deribit    │
 │  - CoinGecko     │     │  Analyzes signals, │     │  Executes   │
 │  - Fear & Greed  │     │  decides to SHORT, │     │  trades on  │
 │  - Deribit APIs  │     │  HOLD, CLOSE, or   │     │  BTC-PERP   │
@@ -20,13 +18,13 @@ An autonomous trading agent powered by Claude that shorts Bitcoin on [Deribit](h
 │  - Technicals    │     │                    │     │             │
 └──────────────────┘     └────────┬───────────┘     └─────────────┘
                                   │
-                         ┌────────▼───────────┐
+                         ┌────────v───────────┐
                          │  SQLite Database    │
                          │  Stores insights,   │
                          │  trades, snapshots  │
                          └────────┬───────────┘
                                   │
-                         ┌────────▼───────────┐
+                         ┌────────v───────────┐
                          │  HTML Report        │
                          │  WSJ-styled brief   │
                          │  opens in browser   │
@@ -34,129 +32,151 @@ An autonomous trading agent powered by Claude that shorts Bitcoin on [Deribit](h
 ```
 
 Each cycle the agent:
-1. **Collects** market data from 5+ sources (BTC price, technicals, sentiment, macro, Deribit-specific)
-2. **Feeds** everything to Claude with a bearish BTC system prompt
+1. **Collects** market data from 5+ sources
+2. **Feeds** everything to Claude via `claude -p` with bearish BTC system prompt
 3. **Receives** a structured decision: `SHORT`, `HOLD`, `CLOSE`, `REDUCE`, or `INCREASE_SHORT`
 4. **Executes** the trade on Deribit (BTC-PERPETUAL futures)
 5. **Stores** the analysis and trade in SQLite
-6. **Generates** a Wall Street Journal-styled HTML report and opens it in your browser
+6. **Generates** a WSJ-styled HTML report
 
 ---
 
-## Quick Start (5 minutes)
+## Quick Start
 
-### 1. Clone and install
+### 1. Clone and setup
 
 ```bash
 git clone https://github.com/miguelemosreverte/anti-microstrategy-claude.git
-cd anti-microstrategy-claude/v2-trading-agent
+cd anti-microstrategy-claude
 pip install -r requirements.txt
+
+# Install git hooks (runs backtest on commit, updates GitHub Pages)
+./setup.sh
 ```
 
-### 2. Get your API keys (3 accounts to create)
+### 2. Get your credentials
 
-| Credential | Where to get it | Time |
+| Credential | Where to get it | Required |
 |---|---|---|
-| **Anthropic API Key** | [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys) | 1 min |
-| **Deribit API Key** (testnet) | [test.deribit.com](https://test.deribit.com) → Account → API → Create Key | 2 min |
-| **FRED API Key** (optional) | [fred.stlouisfed.org](https://fred.stlouisfed.org/docs/api/api_key.html) | 1 min |
+| **Claude Code CLI** | `npm install -g @anthropic-ai/claude-code` | Yes |
+| **Deribit API Key** (testnet) | [test.deribit.com](https://test.deribit.com) > Account > API > Create Key | For live trading |
+| **FRED API Key** | [fred.stlouisfed.org](https://fred.stlouisfed.org/docs/api/api_key.html) | Optional |
 
-#### Deribit Testnet Setup (step by step)
+> The backtest engine uses `claude -p` (Claude Code CLI) directly. No separate Anthropic API key needed.
 
-1. Go to [test.deribit.com](https://test.deribit.com) and register (no KYC needed)
-2. You'll get free test BTC automatically
-3. Click your username → **API** → **Add new key**
-4. Enable these scopes: `account:read`, `trade:read_write`, `wallet:read`
-5. Copy the **Client ID** and **Client Secret**
-
-### 3. Configure
+### 3. Configure (for live trading)
 
 ```bash
 cp .env.example .env
-```
-
-Edit `.env` with your keys:
-
-```env
-ANTHROPIC_API_KEY=sk-ant-api03-xxxxx
-DERIBIT_CLIENT_ID=xxxxxxxx
-DERIBIT_CLIENT_SECRET=xxxxxxxxxxxxxxxx
-DERIBIT_LIVE=false
-
-# Optional but recommended (adds macro data like gold, DXY, yields):
-FRED_API_KEY=xxxxxxxxxxxxxxxx
+# Edit .env with your Deribit credentials
 ```
 
 ### 4. Run
 
 ```bash
-# Single analysis cycle (recommended first run)
+# Run a backtest (downloads data + evaluates agent across 3 folds)
+python -m backtest.run_backtest
+
+# Single live trading cycle
 python run.py
 
 # Continuous mode (runs every 15 min)
 python run.py --loop
-
-# Just generate a report from existing data
-python run.py --report
 ```
-
-The agent will analyze the market, make a trading decision, execute it on Deribit testnet, and open a WSJ-styled HTML report in your browser.
 
 ---
 
-## Architecture
+## Backtesting
+
+The backtest engine uses **sliding-window cross-validation** (like ML time-series CV):
 
 ```
-v2-trading-agent/
-├── agent/
-│   ├── config.py           # Environment variables and settings
-│   ├── database.py         # SQLite schema + CRUD operations
-│   ├── deribit_client.py   # Deribit REST API client (auth, trading, market data)
-│   ├── market_data.py      # Aggregates data from CoinGecko, FRED, Deribit, etc.
-│   ├── report.py           # WSJ-styled HTML report generator (Jinja2)
-│   └── trader.py           # Core AI agent — Claude analyzes + decides + executes
-├── reports/                # Generated HTML reports
-├── trading.db              # SQLite database (created on first run)
-├── run.py                  # Entry point
+Dataset: 30 days of hourly BTC-PERPETUAL candles from Deribit
+
+Fold 1: [===== 25d train =====][== 5d test ==]
+Fold 2:   [===== 25d train =====][== 5d test ==]
+Fold 3:     [===== 25d train =====][== 5d test ==]
+```
+
+Each fold:
+1. Agent sees 25 days of historical data (OHLCV, RSI, MACD, BB, funding, sentiment)
+2. Agent makes trading decisions for the 5-day test window
+3. PnL is simulated against actual price movements
+4. Alpha vs buy-and-hold is calculated
+
+```bash
+# Default: 3 folds, 48h stride
+python -m backtest.run_backtest
+
+# More folds, tighter stride
+python -m backtest.run_backtest --folds 5 --stride 24
+
+# Re-fetch fresh data
+python -m backtest.run_backtest --fetch
+
+# All possible folds
+python -m backtest.run_backtest --all
+```
+
+Reports are generated as WSJ-styled HTML and auto-open in your browser.
+
+---
+
+## Git Hooks & Calibration
+
+The repo uses git hooks to enforce a **regression guard** on backtest performance:
+
+```bash
+# Install hooks (done by setup.sh)
+./setup.sh
+
+# What happens on each commit:
+# 1. Backtest runs automatically (post-commit hook)
+# 2. Results are saved with the commit hash
+# 3. GitHub Pages are updated with latest calibration data
+# 4. If performance regresses, you'll see a warning
+```
+
+Calibration results are **event-sourced via git** — each commit records its backtest performance, creating an audit trail of how the agent improves over time.
+
+---
+
+## Project Structure
+
+```
+.
+├── agent/                  # Live trading agent
+│   ├── config.py           # Environment variables
+│   ├── database.py         # SQLite schema + CRUD
+│   ├── deribit_client.py   # Deribit REST API client
+│   ├── market_data.py      # Market data aggregator
+│   ├── report.py           # WSJ-styled HTML report
+│   └── trader.py           # Core AI agent (Claude)
+├── backtest/               # Backtesting framework
+│   ├── engine.py           # Sliding-window CV engine
+│   ├── fetch_dataset.py    # Historical data downloader
+│   ├── report.py           # Backtest report generator
+│   └── run_backtest.py     # CLI entry point
+├── docs/                   # GitHub Pages site
+│   ├── index.html          # Dashboard homepage
+│   └── calibration.json    # Historical calibration data
+├── hooks/                  # Git hooks (installed by setup.sh)
+│   └── post-commit         # Runs backtest on commit
+├── setup.sh                # Installs git hooks
+├── run.py                  # Live trading entry point
 ├── requirements.txt
 └── .env.example
 ```
-
-### Data Sources
-
-| Source | Data | Auth Required |
-|---|---|---|
-| **Deribit** (public) | BTC index, perpetual ticker, funding rate, volatility, OHLCV | No |
-| **CoinGecko** | BTC/ETH price, 24h change, volume, market cap | No (key optional) |
-| **Alternative.me** | Fear & Greed Index | No |
-| **FRED** | Gold price, DXY, 10Y Treasury, Fed Funds Rate, VIX | Free key |
-| **Computed locally** | RSI, MACD, Bollinger Bands, EMA, ATR (via pandas-ta) | No |
-
-### Database Schema
-
-- **market_snapshots** — Full market state at each cycle (price, funding, sentiment, macro, technicals)
-- **agent_insights** — Claude's analysis, sentiment, confidence, and recommended action
-- **trades** — Executed trades with instrument, direction, amount, status
-- **positions** — Position snapshots (size, entry, PnL, liquidation price)
-- **account_snapshots** — Account equity, balance, margin over time
 
 ---
 
 ## Going Live
 
-When you're ready to trade with real money:
+1. Create API keys on [deribit.com](https://www.deribit.com) (requires KYC)
+2. Set `DERIBIT_LIVE=true` in `.env`
+3. Start with small positions
 
-1. Create API keys on [deribit.com](https://www.deribit.com) (production, requires KYC)
-2. Set `DERIBIT_LIVE=true` in your `.env`
-3. Start with very small positions — the agent caps at 20% of margin per trade
-
-**Risk warning:** This agent has a deliberate bearish bias. Bitcoin can rally significantly before any decline. Short positions have theoretically unlimited loss potential. Only trade with money you can afford to lose.
-
----
-
-## V1: BearDAO Solidity Contracts
-
-The `v1-bear-dao/` directory contains the original smart contract approach — a vault where users deposit USDC/ETH, the vault swaps to PAXG (tokenized gold) via Uniswap V3, and depositors receive $BEAR ERC-20 tokens. See `v1-bear-dao/README.md` for details.
+**Risk warning:** This agent has a deliberate bearish bias. Short positions have theoretically unlimited loss. Only trade with money you can afford to lose.
 
 ---
 

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anti-MicroStrategy Dashboard</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap');
+        :root {
+            --black: #111; --dark: #222; --gray: #666;
+            --light-gray: #999; --border: #ccc; --bg: #faf9f6;
+            --white: #fff; --red: #b91c1c; --green: #15803d;
+            --blue: #1e40af; --gold: #b8860b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Source Serif 4', Georgia, serif; background: var(--bg); color: var(--black); line-height: 1.6; }
+
+        /* Masthead */
+        .masthead { text-align: center; padding: 32px 20px 20px; border-bottom: 3px double var(--black); background: var(--white); }
+        .masthead h1 { font-family: 'Playfair Display', serif; font-weight: 900; font-size: 36px; letter-spacing: -0.5px; }
+        .masthead .subtitle { font-family: 'Inter', sans-serif; font-size: 12px; text-transform: uppercase; letter-spacing: 3px; color: var(--light-gray); margin-top: 6px; }
+
+        /* Navigation */
+        .nav { display: flex; justify-content: center; gap: 0; background: var(--white); border-bottom: 1px solid var(--border); }
+        .nav-item { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; padding: 14px 24px; cursor: pointer; border-bottom: 3px solid transparent; color: var(--gray); transition: all 0.2s; }
+        .nav-item:hover { color: var(--black); }
+        .nav-item.active { color: var(--black); border-bottom-color: var(--black); }
+
+        .container { max-width: 960px; margin: 0 auto; padding: 0 20px; }
+        .section { display: none; padding: 30px 0; }
+        .section.active { display: block; }
+        .section-header { font-family: 'Inter', sans-serif; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: var(--light-gray); padding: 24px 0 8px; border-bottom: 2px solid var(--black); margin-bottom: 20px; }
+
+        /* Cards */
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 30px; }
+        .card { background: var(--white); border: 1px solid var(--border); padding: 20px; text-align: center; }
+        .card-label { font-family: 'Inter', sans-serif; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--light-gray); margin-bottom: 6px; }
+        .card-value { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 700; }
+        .card-sub { font-family: 'Inter', sans-serif; font-size: 12px; color: var(--gray); margin-top: 4px; }
+        .positive { color: var(--green); }
+        .negative { color: var(--red); }
+
+        /* Table */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-family: 'Inter', sans-serif; font-size: 14px; }
+        th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--light-gray); padding: 8px 12px; border-bottom: 2px solid var(--black); }
+        td { padding: 10px 12px; border-bottom: 1px solid #eee; }
+        tr:hover td { background: #f5f5f0; }
+        .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+        /* Chart */
+        .chart-area { background: var(--white); border: 1px solid var(--border); padding: 20px; margin-bottom: 30px; min-height: 300px; position: relative; }
+        .chart-title { font-family: 'Inter', sans-serif; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: var(--light-gray); margin-bottom: 16px; }
+        canvas { width: 100% !important; height: 280px !important; }
+
+        /* Status */
+        .status-badge { display: inline-block; padding: 4px 12px; border-radius: 3px; font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        .status-live { background: #dcfce7; color: var(--green); }
+        .status-idle { background: #f3f4f6; color: var(--gray); }
+
+        /* Footer */
+        .footer { text-align: center; padding: 30px 20px; border-top: 3px double var(--black); margin-top: 40px; font-family: 'Inter', sans-serif; font-size: 11px; color: var(--light-gray); text-transform: uppercase; letter-spacing: 2px; }
+
+        .loading { text-align: center; padding: 60px 20px; font-family: 'Inter', sans-serif; font-size: 14px; color: var(--gray); }
+
+        .commit-hash { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; background: #f3f4f6; padding: 2px 6px; border-radius: 3px; }
+
+        .regression-warn { background: #fef2f2; border: 1px solid #fecaca; padding: 12px 16px; margin: 8px 0; font-family: 'Inter', sans-serif; font-size: 13px; color: var(--red); border-radius: 4px; }
+        .regression-ok { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px 16px; margin: 8px 0; font-family: 'Inter', sans-serif; font-size: 13px; color: var(--green); border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<header class="masthead">
+    <h1>Anti-MicroStrategy</h1>
+    <div class="subtitle">AI-Powered BTC Short Desk &mdash; Calibration Dashboard</div>
+</header>
+
+<nav class="nav">
+    <div class="nav-item active" data-tab="overview">Overview</div>
+    <div class="nav-item" data-tab="benchmarks">Benchmarks</div>
+    <div class="nav-item" data-tab="calibration">Calibration History</div>
+    <div class="nav-item" data-tab="live">Live Status</div>
+</nav>
+
+<div class="container">
+
+    <!-- OVERVIEW TAB -->
+    <div id="overview" class="section active">
+        <div class="section-header">Latest Calibration</div>
+        <div id="overview-cards" class="card-grid">
+            <div class="loading">Loading calibration data...</div>
+        </div>
+
+        <div class="section-header">Performance Over Time</div>
+        <div class="chart-area">
+            <div class="chart-title">Alpha vs Buy-and-Hold (% per fold)</div>
+            <canvas id="alpha-chart"></canvas>
+        </div>
+    </div>
+
+    <!-- BENCHMARKS TAB -->
+    <div id="benchmarks" class="section">
+        <div class="section-header">Benchmark Results</div>
+        <div id="benchmark-cards" class="card-grid">
+            <div class="loading">Loading benchmark data...</div>
+        </div>
+
+        <div class="section-header">Fold-by-Fold Breakdown</div>
+        <div id="benchmark-table-container">
+            <div class="loading">Loading...</div>
+        </div>
+    </div>
+
+    <!-- CALIBRATION HISTORY TAB -->
+    <div id="calibration" class="section">
+        <div class="section-header">Calibration History (Event-Sourced via Git)</div>
+        <p style="font-family:'Inter',sans-serif;font-size:13px;color:var(--gray);margin-bottom:20px;">
+            Each commit triggers a backtest run. Results are recorded here as an audit trail.
+            Regressions in alpha are flagged.
+        </p>
+        <div id="calibration-table-container">
+            <div class="loading">Loading calibration history...</div>
+        </div>
+
+        <div class="section-header">Alpha Trend</div>
+        <div class="chart-area">
+            <div class="chart-title">Avg Alpha % by Commit</div>
+            <canvas id="calibration-chart"></canvas>
+        </div>
+    </div>
+
+    <!-- LIVE STATUS TAB -->
+    <div id="live" class="section">
+        <div class="section-header">Live Agent Status</div>
+        <div class="card-grid">
+            <div class="card">
+                <div class="card-label">Agent Status</div>
+                <div class="card-value"><span class="status-badge status-idle">Idle</span></div>
+                <div class="card-sub">No live session active</div>
+            </div>
+            <div class="card">
+                <div class="card-label">Mode</div>
+                <div class="card-value" style="font-size:24px;">Testnet</div>
+                <div class="card-sub">Deribit testnet (paper trading)</div>
+            </div>
+        </div>
+        <div style="background:var(--white);border:1px solid var(--border);padding:20px;margin-top:20px;">
+            <p style="font-family:'Inter',sans-serif;font-size:13px;color:var(--gray);">
+                The live status page updates when the agent is running in <code>--loop</code> mode.
+                Start the agent with <code>python run.py --loop</code> and this page will reflect real-time
+                positions, recent trades, and agent decisions.
+            </p>
+        </div>
+    </div>
+
+</div>
+
+<footer class="footer">
+    Anti-MicroStrategy &bull; Powered by Claude &bull; <a href="https://github.com/miguelemosreverte/anti-microstrategy-claude" style="color:var(--light-gray);">GitHub</a>
+</footer>
+
+<script>
+// Tab navigation
+document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        item.classList.add('active');
+        document.getElementById(item.dataset.tab).classList.add('active');
+    });
+});
+
+// Load calibration data
+async function loadCalibration() {
+    try {
+        const resp = await fetch('calibration.json');
+        if (!resp.ok) throw new Error('No calibration data yet');
+        const data = await resp.json();
+        if (!data.length) throw new Error('Empty calibration');
+        renderOverview(data);
+        renderBenchmarks(data);
+        renderCalibrationHistory(data);
+        renderCharts(data);
+    } catch (e) {
+        document.getElementById('overview-cards').innerHTML =
+            '<div class="card" style="grid-column:1/-1;"><div class="card-label">No Data Yet</div><div class="card-sub">Run a backtest to generate calibration data: <code>python -m backtest.run_backtest</code></div></div>';
+        document.getElementById('benchmark-cards').innerHTML =
+            '<div class="loading">No benchmark data yet. Run a backtest first.</div>';
+        document.getElementById('calibration-table-container').innerHTML =
+            '<div class="loading">No calibration history yet. Each commit will record results here.</div>';
+    }
+}
+
+function renderOverview(data) {
+    const latest = data[data.length - 1];
+    const trend = data.length >= 2 ? (latest.avg_alpha_pct >= data[data.length - 2].avg_alpha_pct ? 'improving' : 'regressing') : 'first run';
+    const alphaClass = latest.avg_alpha_pct > 0 ? 'positive' : 'negative';
+
+    document.getElementById('overview-cards').innerHTML = `
+        <div class="card">
+            <div class="card-label">Latest Alpha</div>
+            <div class="card-value ${alphaClass}">${latest.avg_alpha_pct > 0 ? '+' : ''}${latest.avg_alpha_pct.toFixed(2)}%</div>
+            <div class="card-sub">vs buy-and-hold</div>
+        </div>
+        <div class="card">
+            <div class="card-label">Win Rate</div>
+            <div class="card-value ${latest.win_rate_pct >= 50 ? 'positive' : 'negative'}">${latest.win_rate_pct}%</div>
+            <div class="card-sub">profitable folds</div>
+        </div>
+        <div class="card">
+            <div class="card-label">Alpha+ Rate</div>
+            <div class="card-value ${latest.alpha_positive_rate_pct >= 50 ? 'positive' : 'negative'}">${latest.alpha_positive_rate_pct}%</div>
+            <div class="card-sub">folds beating BTC</div>
+        </div>
+        <div class="card">
+            <div class="card-label">Calibration Runs</div>
+            <div class="card-value">${data.length}</div>
+            <div class="card-sub">Trend: ${trend}</div>
+        </div>
+    `;
+}
+
+function renderBenchmarks(data) {
+    const latest = data[data.length - 1];
+    document.getElementById('benchmark-cards').innerHTML = `
+        <div class="card">
+            <div class="card-label">Avg Alpha</div>
+            <div class="card-value ${latest.avg_alpha_pct > 0 ? 'positive' : 'negative'}">${latest.avg_alpha_pct > 0 ? '+' : ''}${latest.avg_alpha_pct.toFixed(2)}%</div>
+        </div>
+        <div class="card">
+            <div class="card-label">Win Rate</div>
+            <div class="card-value">${latest.win_rate_pct}%</div>
+        </div>
+        <div class="card">
+            <div class="card-label">Total Trades</div>
+            <div class="card-value">${latest.total_trades}</div>
+        </div>
+        <div class="card">
+            <div class="card-label">Commit</div>
+            <div class="card-value" style="font-size:18px;"><span class="commit-hash">${latest.commit}</span></div>
+            <div class="card-sub">${latest.timestamp.slice(0, 10)}</div>
+        </div>
+    `;
+}
+
+function renderCalibrationHistory(data) {
+    let rows = '';
+    for (let i = data.length - 1; i >= 0; i--) {
+        const d = data[i];
+        const regression = i > 0 && d.avg_alpha_pct < data[i - 1].avg_alpha_pct;
+        const alphaClass = d.avg_alpha_pct > 0 ? 'positive' : 'negative';
+        rows += `<tr>
+            <td><span class="commit-hash">${d.commit}</span></td>
+            <td style="font-size:12px;">${d.timestamp.slice(0, 16)}</td>
+            <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.message}</td>
+            <td class="num ${alphaClass}">${d.avg_alpha_pct > 0 ? '+' : ''}${d.avg_alpha_pct.toFixed(2)}%</td>
+            <td class="num">${d.win_rate_pct}%</td>
+            <td class="num">${d.total_trades}</td>
+            <td>${regression ? '<span style="color:var(--red);">&#9660; regressed</span>' : '<span style="color:var(--green);">&#9650; ok</span>'}</td>
+        </tr>`;
+    }
+
+    document.getElementById('calibration-table-container').innerHTML = `
+        <table>
+            <thead><tr>
+                <th>Commit</th><th>Date</th><th>Message</th>
+                <th class="num">Alpha</th><th class="num">Win Rate</th>
+                <th class="num">Trades</th><th>Status</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+        </table>
+    `;
+}
+
+function renderCharts(data) {
+    // Simple canvas charts (no external dependencies)
+    drawLineChart('alpha-chart', data.map(d => d.avg_alpha_pct), data.map(d => d.commit));
+    drawLineChart('calibration-chart', data.map(d => d.avg_alpha_pct), data.map(d => d.commit));
+}
+
+function drawLineChart(canvasId, values, labels) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas || !values.length) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.parentElement.clientWidth - 40;
+    const H = 260;
+    canvas.width = W * 2;
+    canvas.height = H * 2;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.scale(2, 2);
+
+    const pad = { top: 20, right: 20, bottom: 40, left: 50 };
+    const plotW = W - pad.left - pad.right;
+    const plotH = H - pad.top - pad.bottom;
+
+    const minV = Math.min(0, ...values);
+    const maxV = Math.max(0, ...values);
+    const range = maxV - minV || 1;
+
+    // Grid
+    ctx.strokeStyle = '#eee';
+    ctx.lineWidth = 0.5;
+    for (let i = 0; i <= 4; i++) {
+        const y = pad.top + (plotH / 4) * i;
+        ctx.beginPath();
+        ctx.moveTo(pad.left, y);
+        ctx.lineTo(W - pad.right, y);
+        ctx.stroke();
+        const val = maxV - (range / 4) * i;
+        ctx.fillStyle = '#999';
+        ctx.font = '10px Inter, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(val.toFixed(2) + '%', pad.left - 5, y + 4);
+    }
+
+    // Zero line
+    const zeroY = pad.top + plotH * (maxV / range);
+    ctx.strokeStyle = '#ccc';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(pad.left, zeroY);
+    ctx.lineTo(W - pad.right, zeroY);
+    ctx.stroke();
+
+    // Line
+    if (values.length === 1) {
+        const x = pad.left + plotW / 2;
+        const y = pad.top + plotH * ((maxV - values[0]) / range);
+        ctx.fillStyle = values[0] >= 0 ? '#15803d' : '#b91c1c';
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, Math.PI * 2);
+        ctx.fill();
+    } else {
+        ctx.strokeStyle = '#1e40af';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        values.forEach((v, i) => {
+            const x = pad.left + (plotW / (values.length - 1)) * i;
+            const y = pad.top + plotH * ((maxV - v) / range);
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+
+        // Dots
+        values.forEach((v, i) => {
+            const x = pad.left + (plotW / (values.length - 1)) * i;
+            const y = pad.top + plotH * ((maxV - v) / range);
+            ctx.fillStyle = v >= 0 ? '#15803d' : '#b91c1c';
+            ctx.beginPath();
+            ctx.arc(x, y, 4, 0, Math.PI * 2);
+            ctx.fill();
+        });
+    }
+
+    // X labels
+    ctx.fillStyle = '#999';
+    ctx.font = '10px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    const step = Math.max(1, Math.floor(labels.length / 8));
+    labels.forEach((l, i) => {
+        if (i % step === 0 || i === labels.length - 1) {
+            const x = values.length === 1 ? pad.left + plotW / 2 : pad.left + (plotW / (values.length - 1)) * i;
+            ctx.fillText(l, x, H - pad.bottom + 16);
+        }
+    });
+}
+
+// Load data on page load
+loadCalibration();
+</script>
+</body>
+</html>

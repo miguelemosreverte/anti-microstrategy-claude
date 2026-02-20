@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+#
+# post-commit hook: runs backtest and updates calibration data after each commit.
+# Installed by ./setup.sh — do not run directly.
+#
+set -e
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+COMMIT_HASH="$(git rev-parse --short HEAD)"
+COMMIT_MSG="$(git log -1 --pretty=%s)"
+TIMESTAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  post-commit hook: Running backtest calibration"
+echo "  Commit: ${COMMIT_HASH} — ${COMMIT_MSG}"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# Check if dataset exists, fetch if not
+if [ ! -f "${REPO_ROOT}/datasets/latest.json" ]; then
+    echo "  No dataset found, fetching..."
+    cd "${REPO_ROOT}" && python3 -m backtest.fetch_dataset 2>/dev/null || {
+        echo "  [skip] Could not fetch dataset. Install deps: pip install -r requirements.txt"
+        exit 0
+    }
+fi
+
+# Run backtest (3 folds, rule-based if no Claude CLI)
+cd "${REPO_ROOT}"
+RESULTS_FILE="${REPO_ROOT}/reports/backtest-results-latest.json"
+
+python3 -m backtest.run_backtest --folds 3 --stride 48 2>&1 | tail -20 || {
+    echo "  [skip] Backtest failed. Continuing without calibration update."
+    exit 0
+}
+
+# Extract key metrics from results
+if [ -f "${RESULTS_FILE}" ]; then
+    AVG_ALPHA=$(python3 -c "import json; r=json.load(open('${RESULTS_FILE}')); print(r['aggregate']['avg_alpha_pct'])" 2>/dev/null || echo "0")
+    WIN_RATE=$(python3 -c "import json; r=json.load(open('${RESULTS_FILE}')); print(r['aggregate']['win_rate_pct'])" 2>/dev/null || echo "0")
+    ALPHA_RATE=$(python3 -c "import json; r=json.load(open('${RESULTS_FILE}')); print(r['aggregate']['alpha_positive_rate_pct'])" 2>/dev/null || echo "0")
+    TOTAL_TRADES=$(python3 -c "import json; r=json.load(open('${RESULTS_FILE}')); print(r['aggregate']['total_trades'])" 2>/dev/null || echo "0")
+
+    # Update calibration history (docs/calibration.json)
+    CALIBRATION_FILE="${REPO_ROOT}/docs/calibration.json"
+    mkdir -p "${REPO_ROOT}/docs"
+
+    # Create or append to calibration history
+    python3 << PYEOF
+import json, os
+
+cal_file = "${CALIBRATION_FILE}"
+entry = {
+    "commit": "${COMMIT_HASH}",
+    "message": """${COMMIT_MSG}""",
+    "timestamp": "${TIMESTAMP}",
+    "avg_alpha_pct": float("${AVG_ALPHA}"),
+    "win_rate_pct": float("${WIN_RATE}"),
+    "alpha_positive_rate_pct": float("${ALPHA_RATE}"),
+    "total_trades": int("${TOTAL_TRADES}"),
+}
+
+history = []
+if os.path.exists(cal_file):
+    try:
+        history = json.load(open(cal_file))
+    except:
+        history = []
+
+history.append(entry)
+
+with open(cal_file, "w") as f:
+    json.dump(history, f, indent=2)
+
+# Check for regression (warn if alpha decreased)
+if len(history) >= 2:
+    prev = history[-2]
+    curr = history[-1]
+    if curr["avg_alpha_pct"] < prev["avg_alpha_pct"]:
+        print(f"  ⚠ REGRESSION WARNING: Alpha decreased from {prev['avg_alpha_pct']}% to {curr['avg_alpha_pct']}%")
+        print(f"    Previous commit: {prev['commit']} ({prev['avg_alpha_pct']}%)")
+        print(f"    Current commit:  {curr['commit']} ({curr['avg_alpha_pct']}%)")
+    else:
+        print(f"  ✓ No regression. Alpha: {prev['avg_alpha_pct']}% → {curr['avg_alpha_pct']}%")
+else:
+    print(f"  ✓ First calibration entry recorded. Alpha: {entry['avg_alpha_pct']}%")
+
+print(f"  Calibration data saved to {cal_file}")
+PYEOF
+
+    echo ""
+    echo "  Calibration results:"
+    echo "    Avg Alpha:    ${AVG_ALPHA}%"
+    echo "    Win Rate:     ${WIN_RATE}%"
+    echo "    Alpha+ Rate:  ${ALPHA_RATE}%"
+    echo "    Total Trades: ${TOTAL_TRADES}"
+fi
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  post-commit hook complete"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
