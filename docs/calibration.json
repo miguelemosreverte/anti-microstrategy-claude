@@ -7,5 +7,14 @@
     "win_rate_pct": 100.0,
     "alpha_positive_rate_pct": 100.0,
     "total_trades": 33
+  },
+  {
+    "commit": "bca98c8",
+    "message": "Seed calibration data with first backtest run",
+    "timestamp": "2026-02-20T01:18:56Z",
+    "avg_alpha_pct": 4.2851,
+    "win_rate_pct": 100.0,
+    "alpha_positive_rate_pct": 100.0,
+    "total_trades": 33
   }
 ]
